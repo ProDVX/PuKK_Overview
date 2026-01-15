@@ -29,6 +29,8 @@
     <div class="button-group">
       <button onclick="set_occupied()">Set Status: Occupied</button>
       <button onclick="set_online()">Set Status: Online</button>
+      <button onclick="set_busy()">Set Status: Busy</button>
+	  <button class="deleteBtn" onclick="remove_pukk()">Remove Pukk</button>
       <button class="close-btn" onclick="closeModal()">Close</button>
     </div>
   </dialog>
@@ -40,7 +42,6 @@
 
     let localUnits = <%- units %>;
     let selectedUnitId = null;
-
 
     // Function to build the HTML for the units
     function renderUI(data) {
@@ -70,8 +71,8 @@
     async function set_occupied() {
       const unit = localUnits.find(u => u.id === selectedUnitId);
       unit.status = 'occupied';
-      
-	  await fetch('/setStatus', {
+
+      await fetch('/setStatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -82,7 +83,7 @@
         })
       })
 
-	  manualCommand({
+      manualCommand({
         type: "2",
         red: 255,
         green: 0,
@@ -90,7 +91,7 @@
         wait_ms: 0,
         speed_ms: 0,
         brightness: 100
-      })      
+      })
     }
 
     async function set_online() {
@@ -110,6 +111,32 @@
 
       manualCommand({
         type: "2",
+        red: 0,
+        green: 255,
+        blue: 0,
+        wait_ms: 0,
+        speed_ms: 0,
+        brightness: 100
+      })
+    }
+
+    async function set_busy() {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      unit.status = 'busy';
+
+      await fetch('/setStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mac: unit.mac,
+          newStatus: "busy"
+        })
+      })
+
+      manualCommand({
+        type: 4,
         red: 0,
         green: 255,
         blue: 0,

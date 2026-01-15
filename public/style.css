@@ -20,7 +20,7 @@ body { font-family: sans-serif; text-align: center; background: #f9f9f9; }
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 16px solid #ccc;
+    border: 16px solid transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -28,9 +28,27 @@ body { font-family: sans-serif; text-align: center; background: #f9f9f9; }
     transition: 0.3s;
 }
 
+@property --angle {
+	syntax: '<angle>';
+	initial-value: 0deg;
+	inherits: false;
+}
+
+@keyframes rotateGradient {
+	to {--angle: 360deg;}
+}
+
 .available { border-color: #27bd2c } /* Light Green */
 .occupied { border-color: #ce0015 } /* Light Red */
 .offline { border-color: #757575 } /* Grey */
+.circle.busy { 
+	background-image: linear-gradient(white, white),
+		conic-gradient(from var(--angle), red, orange, yellow, green, blue, red);
+	background-origin: border-box;
+	background-clip: content-box, border-box;
+
+	animation: rotateGradient 3s linear infinite;
+}
 
 .status-box { border: 1px solid #000; padding: 5px 20px; font-style: italic; }
 
