@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pukk Overview</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+  <h1>Pukk Workspace Overview</h1>
+  <div class="grid-container" id="pukk-grid"></div>
+
+  <dialog id="command-modal">
+    <h3 id="modal-title">Unit Name</h3>
+
+    <div style="
+          margin-bottom: 20px;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 15px;
+        ">
+      <input type="text" id="rename-input" placeholder="Enter new name" style="padding: 8px; width: 80%; margin-bottom: 5px" />
+      <button onclick="saveName()" style="width: 85%; background: #e3f2fd">
+        Save Name
+      </button>
+    </div>
+
+    <p id="modal-ip"></p>
+    <div class="button-group">
+      <button onclick="set_occupied()">Set Status: Occupied</button>
+      <button onclick="set_online()">Set Status: Online</button>
+      <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    const socket = io();
+    const grid = document.getElementById('pukk-grid');
+    const modal = document.getElementById('command-modal');
+
+    let localUnits = <%- units %>;
+    let selectedUnitId = null;
+
+
+    // Function to build the HTML for the units
+    function renderUI(data) {
+      localUnits = data; // Update local reference
+      grid.innerHTML = data.map(u => `
+      	<div class="pukk-unit" onclick="openModal(${u.id})">
+      		<div class="circle ${u.status}">
+      			<span>${u.name}</span>
+      		</div>
+      		<div class="status-box">Status: ${u.status}</div>
+      	</div>
+      		`).join('');
+    }
+
+    function openModal(id) {
+      selectedUnitId = id;
+      const unit = localUnits.find(u => u.id === id);
+      document.getElementById('modal-title').innerText = unit.name;
+      document.getElementById('modal-ip').innerText = `IP: ${unit.ip}`;
+      modal.showModal();
+    }
+
+    function closeModal() {
+      modal.close();
+    }
+
+    async function set_occupied() {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      unit.status = 'occupied';
+      
+	  await fetch('/setStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mac: unit.mac,
+          newStatus: "occupied"
+        })
+      })
+
+	  manualCommand({
+        type: "2",
+        red: 255,
+        green: 0,
+        blue: 0,
+        wait_ms: 0,
+        speed_ms: 0,
+        brightness: 100
+      })      
+    }
+
+    async function set_online() {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      unit.status = 'online';
+
+      await fetch('/setStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mac: unit.mac,
+          newStatus: "available"
+        })
+      })
+
+      manualCommand({
+        type: "2",
+        red: 0,
+        green: 255,
+        blue: 0,
+        wait_ms: 0,
+        speed_ms: 0,
+        brightness: 100
+      })
+    }
+
+    async function saveName() {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      const newName = document.getElementById('rename-input').value;
+
+      if (!newName) return;
+
+      await fetch('/rename', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mac: unit.mac,
+          newName: newName
+        })
+      });
+    }
+
+    async function manualCommand(command) {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      if (unit.status === 'offline') {
+        alert('Unit is offline. Cannot send command.');
+        return;
+      }
+
+      try {
+
+        const response = await fetch(`http://${unit.ip}/setLeds`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            "ledValues": {
+              "type": command.type,
+              "red": command.red,
+              "green": command.green,
+              "blue": command.blue,
+              "wait_ms": command.wait_ms,
+              "speed_ms": command.speed_ms,
+              'brightness': command.brightness
+            }
+          })
+        })
+
+        if (response.ok) console.log("Led Command sent successfully")
+      } catch (err) {
+        console.error("Fetch error:", err);
+        <%# alert("Could not reach the PUKK.") %>
+      }
+    }
+
+    // Handle real-time updates from server
+    socket.on('updateUnits', (updatedUnits) => {
+      renderUI(updatedUnits);
+    });
+
+    // Initial render when page loads
+    renderUI(localUnits);
+  </script>
+</body>
+
+</html>
