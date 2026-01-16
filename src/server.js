@@ -358,8 +358,10 @@ async function sendClockCommand(ip, payload) {
 }
 
 const PORT = 3001;
+const wifiIp = "192.168.100.50"
 server.listen(PORT, "0.0.0.0", () => {
   console.log("-----------------------------------------");
-  console.log(`Server running at http://localhost:${PORT}/dashboard`);
+  console.log(`On Wifi-IP Address: ${wifiIp} (SSID PUKK)`);
+  console.log(`Server running at http://${wifiIp}:${PORT}/dashboard`);
   console.log("-----------------------------------------");
 });
