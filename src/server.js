@@ -19,7 +19,7 @@ app.set("views", viewsPath);
 app.use(express.static(publicPath));
 
 let statuses = [
-  {
+  { //* Single Press -> Available (Green)
     action: "short_press",
     status: "available",
     jsonBody: {
@@ -34,7 +34,7 @@ let statuses = [
       },
     },
   },
-  {
+  { //* Double Press -> Occupied (Red)
     action: "double_press",
     status: "occupied",
     jsonBody: {
@@ -49,8 +49,8 @@ let statuses = [
       },
     },
   },
-  {
-    action: "long_press_3s",
+  { //* Long Press 5s -> Offline (Off)
+    action: "long_press_5s",
     status: "offline",
     jsonBody: {
       ledValues: {
@@ -64,8 +64,8 @@ let statuses = [
       },
     },
   },
-  {
-    action: "long_press_5s",
+  { //* Long Press 3s -> Busy (Rainbow)
+    action: "long_press_3s",
     status: "busy",
     jsonBody: {
       ledValues: {
@@ -79,7 +79,7 @@ let statuses = [
       },
     },
   },
-  {
+  { //* Auto-reset to Available (Green to Orange to Red)
     status: "ending",
     jsonBody: {
       ledValues: {
@@ -109,16 +109,90 @@ let statuses = [
 ];
 
 // --- DATA ---
-let units = [
-  {
-    id: 1,
-    name: "Pukk 1",
-    status: "available",
-    mac: "00:1A:2B:3C:4D:5E",
-    ip: "192.168.1.101",
-    lastSeen: new Date(),
-  },
-];
+let units = [];
+
+// units = [
+// 	{
+// 		id: 1,
+// 		name: "Pukk 1",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 2,
+// 		name: "Pukk 2",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 3,
+// 		name: "Pukk 3",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 4,
+// 		name: "Pukk 4",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 5,
+// 		name: "Pukk 5",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 6,
+// 		name: "Pukk 6",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 7,
+// 		name: "Pukk 7",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 8,
+// 		name: "Pukk 8",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 9,
+// 		name: "Pukk 9",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  },
+// 	  {
+// 		id: 10,
+// 		name: "Pukk 10",
+// 		status: "available",
+// 		mac: "00:1A:2B:3C:4D:5E",
+// 		ip: "192.168.1.101",
+// 		lastSeen: new Date(),
+// 	  }  
+// ]
 
 // --- ROUTES ---
 app.get("/dashboard", (req, res) => {
