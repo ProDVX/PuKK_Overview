@@ -20,17 +20,19 @@
           padding-bottom: 15px;
         ">
       <input type="text" id="rename-input" placeholder="Enter new name" style="padding: 8px; width: 80%; margin-bottom: 5px" />
-      <button onclick="saveName()" style="width: 85%; background: #e3f2fd">
+      <button onclick="save_name()" style="width: 85%; background: #e3f2fd">
         Save Name
       </button>
     </div>
 
     <p id="modal-ip"></p>
+    <p id="modal-mac"></p>
+    <p id="modal-lastSeen"></p>
     <div class="button-group">
       <button onclick="set_occupied()">Set Status: Occupied</button>
       <button onclick="set_online()">Set Status: Online</button>
       <button onclick="set_busy()">Set Status: Busy</button>
-	  <button class="deleteBtn" onclick="remove_pukk()">Remove Pukk</button>
+      <button class="deleteBtn" onclick="remove_pukk()">Remove Pukk</button>
       <button class="close-btn" onclick="closeModal()">Close</button>
     </div>
   </dialog>
@@ -42,6 +44,19 @@
 
     let localUnits = <%- units %>;
     let selectedUnitId = null;
+
+    async function safeUIFetch(url, options, errorMessage) {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(`Status: ${response.status}`);
+        return true;
+      } catch (err) {
+        console.error(`${errorMessage}:`, err);
+        // Inform the user without crashing
+        alert(`${errorMessage}. Check server connection.`);
+        return false;
+      }
+    }
 
     // Function to build the HTML for the units
     function renderUI(data) {
@@ -61,6 +76,10 @@
       const unit = localUnits.find(u => u.id === id);
       document.getElementById('modal-title').innerText = unit.name;
       document.getElementById('modal-ip').innerText = `IP: ${unit.ip}`;
+      document.getElementById('modal-mac').innerText = `MAC: ${unit.mac}`;
+      const timeToDisplay = new Date(unit.lastSeen).toLocaleString();
+      document.getElementById('modal-lastSeen').innerText = `Last Seen: ${timeToDisplay}`;
+
       modal.showModal();
     }
 
@@ -68,11 +87,26 @@
       modal.close();
     }
 
+    async function remove_pukk() {
+      const unit = localUnits.find(u => u.id === selectedUnitId);
+      const success = await safeUIFetch('/removePukk', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mac: unit.mac
+        })
+      }, "Could not remove Pukk");
+
+      if (success) closeModal();
+    }
+
     async function set_occupied() {
       const unit = localUnits.find(u => u.id === selectedUnitId);
       unit.status = 'occupied';
 
-      await fetch('/setStatus', {
+      await safeUIFetch('/setStatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -81,9 +115,9 @@
           mac: unit.mac,
           newStatus: "occupied"
         })
-      })
+      }, "Could not set status to occupied");
 
-      manualCommand({
+      manual_command({
         type: "2",
         red: 255,
         green: 0,
@@ -98,7 +132,7 @@
       const unit = localUnits.find(u => u.id === selectedUnitId);
       unit.status = 'online';
 
-      await fetch('/setStatus', {
+      await safeUIFetch('/setStatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -107,9 +141,9 @@
           mac: unit.mac,
           newStatus: "available"
         })
-      })
+      }, "Could not set status to online");
 
-      manualCommand({
+      manual_command({
         type: "2",
         red: 0,
         green: 255,
@@ -124,7 +158,7 @@
       const unit = localUnits.find(u => u.id === selectedUnitId);
       unit.status = 'busy';
 
-      await fetch('/setStatus', {
+      await safeUIFetch('/setStatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -135,7 +169,7 @@
         })
       })
 
-      manualCommand({
+      manual_command({
         type: 4,
         red: 0,
         green: 255,
@@ -146,13 +180,12 @@
       })
     }
 
-    async function saveName() {
+    async function save_name() {
       const unit = localUnits.find(u => u.id === selectedUnitId);
       const newName = document.getElementById('rename-input').value;
-
       if (!newName) return;
 
-      await fetch('/rename', {
+      await safeUIFetch('/rename', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -161,10 +194,10 @@
           mac: unit.mac,
           newName: newName
         })
-      });
+      }, "Could not rename Pukk");
     }
 
-    async function manualCommand(command) {
+    async function manual_command(command) {
       const unit = localUnits.find(u => u.id === selectedUnitId);
       if (unit.status === 'offline') {
         alert('Unit is offline. Cannot send command.');

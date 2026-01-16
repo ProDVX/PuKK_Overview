@@ -20,7 +20,7 @@ app.use(express.static(publicPath));
 
 let statuses = [
   {
-	action: "short_press",
+    action: "short_press",
     status: "available",
     jsonBody: {
       ledValues: {
@@ -35,7 +35,7 @@ let statuses = [
     },
   },
   {
-	action: "double_press",
+    action: "double_press",
     status: "occupied",
     jsonBody: {
       ledValues: {
@@ -50,7 +50,7 @@ let statuses = [
     },
   },
   {
-	action: "long_press_3s",
+    action: "long_press_3s",
     status: "offline",
     jsonBody: {
       ledValues: {
@@ -65,7 +65,7 @@ let statuses = [
     },
   },
   {
-	action: "long_press_5s",
+    action: "long_press_5s",
     status: "busy",
     jsonBody: {
       ledValues: {
@@ -79,6 +79,33 @@ let statuses = [
       },
     },
   },
+  {
+    status: "ending",
+    jsonBody: {
+      ledValues: {
+        initial: {
+          l: 100,
+          r: 255,
+          g: 0,
+          b: 0,
+        },
+        end: {
+          l: 100,
+          r: 0,
+          g: 255,
+          b: 0,
+        },
+        intermediary: {
+          l: 100,
+          r: 255,
+          g: 165,
+          b: 0,
+        },
+        rotationTime_s: 6,
+        counterClockwise: false,
+      },
+    },
+  },
 ];
 
 // --- DATA ---
@@ -86,9 +113,10 @@ let units = [
   {
     id: 1,
     name: "Pukk 1",
-    status: "offline",
+    status: "available",
     mac: "00:1A:2B:3C:4D:5E",
     ip: "192.168.1.101",
+    lastSeen: new Date(),
   },
 ];
 
@@ -110,18 +138,31 @@ app.post("/rename", (req, res) => {
   res.status(404).send("Unit not found");
 });
 
+app.delete("/removePukk", (req, res) => {
+  const { mac } = req.body;
+  const unitIndex = units.findIndex((u) => u.mac === mac);
+  if (unitIndex !== -1) {
+    units.splice(unitIndex, 1);
+    // Broadcast the removal to all dashboards
+    io.emit("updateUnits", units);
+    return res.status(200).send("Pukk removed");
+  }
+  res.status(404).send("Unit not found");
+});
+
 app.post("/setStatus", (req, res) => {
   const { mac, newStatus } = req.body;
   const unit = units.find((u) => u.mac === mac);
   if (unit && newStatus) {
     unit.status = newStatus;
+	unit.lastSeen = new Date();
     // Broadcast the status change to all dashboards
     io.emit("updateUnits", units);
 
-	let statusEntry = statuses.find((s) => s.status === newStatus);
-	if(statusEntry) {
-		sendLedCommand(unit.ip, statusEntry.jsonBody);
-	}
+    let statusEntry = statuses.find((s) => s.status === newStatus);
+    if (statusEntry) {
+      sendLedCommand(unit.ip, statusEntry.jsonBody);
+    }
 
     return res.status(200).send("Status updated");
   }
@@ -145,19 +186,21 @@ app.post("/", (req, res) => {
       status: "available",
       mac: mac,
       ip: pukkIp,
+      lastSeen: new Date(),
     };
     units.push(unit);
   } else {
     unit.ip = pukkIp;
+    unit.lastSeen = new Date();
   }
 
   // Logic: Server decides status and LED color based on action
-  let ledPayload = { command: "setLeds", body: {}}; // Default Green
+  let ledPayload = { command: "setLeds", body: {} }; // Default Green
 
   let statusEntry = statuses.find((s) => s.action === action);
   if (statusEntry) {
-	unit.status = statusEntry.status;
-	ledPayload = statusEntry.jsonBody;
+    unit.status = statusEntry.status;
+    ledPayload = statusEntry.jsonBody;
   }
 
   // Send HTTP POST back to the Pukk
@@ -169,30 +212,80 @@ app.post("/", (req, res) => {
   res.status(200).send("OK");
 });
 
+setInterval(() => {
+  const now = new Date();
+  const TIMEOUT_MS = 10000; // 10 seconds
+  units.forEach((unit) => {
+    const timeElapsed = now - new Date(unit.lastSeen);
+    if (unit.status === "occupied" && timeElapsed > TIMEOUT_MS) {
+      console.log(`Auto resetting ${unit.name} due to inactivity.`);
+
+      const endingStatus = statuses.find((s) => s.status === "ending");
+      unit.status = "ending";
+      unit.lastSeen = new Date();
+
+      sendClockCommand(unit.ip, endingStatus.jsonBody);
+
+      io.emit("updateUnits", units);
+    }
+  });
+}, 1000);
+
+setInterval(() => {
+  const now = new Date();
+  const TIMEOUT_MS = 8000; // 24 seconds
+  units.forEach((unit) => {
+    const timeElapsed = now - new Date(unit.lastSeen);
+    if (unit.status === "ending" && timeElapsed > TIMEOUT_MS) {
+      console.log(`${unit.name} is reset to available.`);
+
+      const availableStatus = statuses.find((s) => s.status === "available");
+      unit.status = "available";
+
+      sendLedCommand(unit.ip, availableStatus.jsonBody);
+
+      io.emit("updateUnits", units);
+    }
+  });
+}, 1000);
+
+app.use((err, req, res, next) => {
+  console.error("SERVER ERROR:", err.stack);
+  res.status(500).send("Internal Server Error");
+});
+
+async function safeFetch(url, payload, description) {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      // Set a short timeout so the server doesn't hang forever
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) {
+      console.error(
+        `[${description}] Device returned error: ${response.status}`
+      );
+    }
+  } catch (err) {
+    console.error(`[${description}] Failed to reach ${url}: ${err.message}`);
+    // TODO: Optionally set unit.status = 'offline' here if connection fails
+
+  }
+}
+
+async function sendLedCommand(ip, payload) {
+    await safeFetch(`http://${ip}/api/v1/setLeds`, payload, "LED_CMD");
+}
+
+async function sendClockCommand(ip, payload) {
+    await safeFetch(`http://${ip}/api/v1/setLeds/clock`, payload, "CLOCK_CMD");
+}
+
 const PORT = 3001;
 server.listen(PORT, "0.0.0.0", () => {
   console.log("-----------------------------------------");
   console.log(`Server running at http://localhost:${PORT}/dashboard`);
   console.log("-----------------------------------------");
 });
-
-async function sendLedCommand(ip, payload) {
-  const data = JSON.stringify(payload);
-  const options = {
-    hostname: ip,
-    body: data,
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": data.length,
-    },
-  };
-
-  await fetch(`http://${ip}/api/v1/setLeds`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-}
