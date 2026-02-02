@@ -109,90 +109,91 @@ let statuses = [
 ];
 
 // --- DATA ---
-let units = [];
+// let units = [];
+let nextUnitId = 1;
 
-// units = [
-// 	{
-// 		id: 1,
-// 		name: "Pukk 1",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 2,
-// 		name: "Pukk 2",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 3,
-// 		name: "Pukk 3",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 4,
-// 		name: "Pukk 4",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 5,
-// 		name: "Pukk 5",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 6,
-// 		name: "Pukk 6",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 7,
-// 		name: "Pukk 7",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 8,
-// 		name: "Pukk 8",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 9,
-// 		name: "Pukk 9",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  },
-// 	  {
-// 		id: 10,
-// 		name: "Pukk 10",
-// 		status: "available",
-// 		mac: "00:1A:2B:3C:4D:5E",
-// 		ip: "192.168.1.101",
-// 		lastSeen: new Date(),
-// 	  }  
-// ]
+units = [
+	{
+		id: 1,
+		name: "Pukk 1",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 2,
+		name: "Pukk 2",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 3,
+		name: "Pukk 3",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 4,
+		name: "Pukk 4",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 5,
+		name: "Pukk 5",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 6,
+		name: "Pukk 6",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 7,
+		name: "Pukk 7",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 8,
+		name: "Pukk 8",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 9,
+		name: "Pukk 9",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  },
+	  {
+		id: 10,
+		name: "Pukk 10",
+		status: "available",
+		mac: "00:1A:2B:3C:4D:5E",
+		ip: "192.168.1.101",
+		lastSeen: new Date(),
+	  }  
+]
 
 // --- ROUTES ---
 app.get("/dashboard", (req, res) => {
@@ -255,7 +256,7 @@ app.post("/", (req, res) => {
 
   if (!unit) {
     unit = {
-      id: units.length + 1,
+      id: nextUnitId++,
       name: `Pukk ${units.length + 1}`,
       status: "available",
       mac: mac,
@@ -288,7 +289,7 @@ app.post("/", (req, res) => {
 
 setInterval(() => {
   const now = new Date();
-  const TIMEOUT_MS = 10000; // 10 seconds
+  const TIMEOUT_MS = 8000; // 10 seconds
   units.forEach((unit) => {
     const timeElapsed = now - new Date(unit.lastSeen);
     if (unit.status === "occupied" && timeElapsed > TIMEOUT_MS) {
