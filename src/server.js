@@ -3,11 +3,11 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 
+const os = require("os");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-
-app.use(express.json());
 
 // --- PATH CONFIGURATION ---
 const viewsPath = path.join(__dirname, "../views");
@@ -18,182 +18,130 @@ app.set("view engine", "ejs");
 app.set("views", viewsPath);
 app.use(express.static(publicPath));
 
+app.use(express.json({
+  verify: (req, res, buf, encoding) => {
+    const rawString = buf.toString(encoding || 'utf8');
+    
+    // This will print the exact string, including hidden characters
+    console.log("--- RAW INCOMING BODY ---");
+    console.log(rawString);
+    console.log("-------------------------");
+
+    // We can also log the hex values to see hidden control characters (like \x00 or \x02)
+    console.log("HEX representation (to find hidden chars):");
+    console.log(buf.toString('hex').match(/.{1,2}/g).join(' '));
+  }
+}));
+
 let statuses = [
   { //* Single Press -> Available (Green)
     action: "short_press",
     status: "available",
+    ledStatus: "on",
     jsonBody: {
-      ledValues: {
-        type: 2,
-        red: 0,
-        green: 255,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100,
+      led_values: {
+        color: {
+          brightness: 100,
+          red: 0,
+          green: 255,
+          blue: 0
+        },
+        duration_ms: 0
       },
     },
   },
   { //* Double Press -> Occupied (Red)
     action: "double_press",
     status: "occupied",
+    ledStatus: "on",
     jsonBody: {
-      ledValues: {
-        type: 2,
-        red: 255,
-        green: 0,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100,
+      led_values: {
+        color: {
+          brightness: 100,
+          red: 255,
+          green: 0,
+          blue: 0
+        },
+        duration_ms: 0
       },
     },
   },
   { //* Long Press 5s -> Offline (Off)
     action: "long_press_5s",
     status: "offline",
+    ledStatus: "on",
     jsonBody: {
-      ledValues: {
-        type: 0,
-        red: 0,
-        green: 0,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100,
+      led_values: {
+        color: {
+          brightness: 0,
+          red: 0,
+          green: 0,
+          blue: 0
+        },
+        duration_ms: 0
       },
     },
   },
   { //* Long Press 3s -> Busy (Rainbow)
     action: "long_press_3s",
     status: "busy",
+    ledStatus: "rainbow",
     jsonBody: {
-      ledValues: {
-        type: 4,
-        red: 0,
-        green: 0,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100,
+      led_values: {
+        speed_ms: 10,
+        duration_ms: 0,
+        counter_clockwise: false
       },
     },
   },
   { //* Auto-reset to Available (Green to Orange to Red)
     status: "ending",
+    ledStatus: 'clock',
     jsonBody: {
-      ledValues: {
-        initial: {
-          l: 100,
-          r: 255,
-          g: 0,
-          b: 0,
+      led_values: {
+        initial_color: {
+          brightness: 100,
+          red: 255,
+          green: 0,
+          blue: 0,
         },
-        end: {
-          l: 100,
-          r: 0,
-          g: 255,
-          b: 0,
+        end_color: {
+          brightness: 100,
+          red: 0,
+          green: 255,
+          blue: 0,
         },
-        intermediary: {
-          l: 100,
-          r: 255,
-          g: 165,
-          b: 0,
+        intermediate_color: {
+          brightness: 100,
+          red: 255,
+          green: 165,
+          blue: 0,
         },
-        rotationTime_s: 6,
-        counterClockwise: false,
+        rotation_time_s: 6,
+        counter_clockwise: false,
       },
     },
   },
+  { //* Occupied on NFC
+    action: "nfc",
+    status: "occupied",
+    jsonBody: {
+      led_values: {
+        color: {
+          brightness: 100,
+          red: 255,
+          green: 0,
+          blue: 0
+        },
+        duration_ms: 0
+      },
+    },
+  }
 ];
 
 // --- DATA ---
-// let units = [];
+let units = [];
 let nextUnitId = 1;
-
-units = [
-	{
-		id: 1,
-		name: "Innovation Left-Top / 1",
-		status: "available",
-		ip: "192.168.100.104",
-		mac: "10:00:3B:AC:AD:A8",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 2,
-		name: "Innovation Left-Bottom / 2",
-		status: "available",
-		ip: "192.168.100.110",
-		mac: "10:00:3B:AC:A4:7C",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 3,
-		name: "Innovation Middle-Top / 3",
-		status: "available",
-		ip: "192.168.100.83",
-		mac: "10:00:3B:AB:C7:68",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 4,
-		name: "Innovation Middle-Bottom / 4",
-		status: "available",
-		ip: "192.168.100.84",
-		mac: "10:00:3B:AD:E8:B8",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 5,
-		name: "Innovation Right-Top / 5",
-		status: "available",
-		ip: "192.168.100.80",
-		mac: "10:00:3B:AB:E0:10",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 6,
-		name: "Innovation Right-Bottom / 6",
-		status: "available",
-		ip: "192.168.100.66",
-		mac: "10:00:3B:AD:E7:BC",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 7,
-		name: "Table 1",
-		status: "available",
-		ip: "192.168.100.112",
-		mac: "10:00:3B:AC:C4:28",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 8,
-		name: "Table 2",
-		status: "available",
-		ip: "192.168.100.111",
-		mac: "10:00:3B:AB:DA:F4",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 9,
-		name: "Table 3",
-		status: "available",
-		ip: "192.168.100.114",
-		mac: "10:00:3B:AB:D7:A0",
-		lastSeen: new Date(),
-	  },
-	  {
-		id: 10,
-		name: "Table 4",
-		status: "available",
-		ip: "192.168.100.113",
-		mac: "10:00:3B:AB:BE:B8",
-		lastSeen: new Date(),
-	  }  
-]
 
 // --- ROUTES ---
 app.get("/dashboard", (req, res) => {
@@ -244,12 +192,15 @@ app.post("/setStatus", (req, res) => {
   res.status(404).send("Unit not found");
 });
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Pukk Webhook
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
   const action = req.query.action;
   const mac = req.query.mac ? req.query.mac.toUpperCase() : null;
   const pukkIp = req.ip.replace("::ffff:", "");
-
+  console.log(`Received request with action=${action} from ip:${pukkIp}`);
+  
   if (!mac || !action) return res.status(400).send("Missing MAC/Action");
 
   let unit = units.find((u) => u.mac === mac);
@@ -269,22 +220,50 @@ app.post("/", (req, res) => {
     unit.lastSeen = new Date();
   }
 
-  // Logic: Server decides status and LED color based on action
-  let ledPayload = { command: "setLeds", body: {} }; // Default Green
-
-  let statusEntry = statuses.find((s) => s.action === action);
-  if (statusEntry) {
-    unit.status = statusEntry.status;
-    ledPayload = statusEntry.jsonBody;
+  if(req.body && Object.keys(req.body).length > 0) {
+    console.log(req.body);
   }
 
-  // Send HTTP POST back to the Pukk
-  sendLedCommand(unit.ip, ledPayload);
+  if (action==="nfc") {
+    if (req.body.data) {
+      let nfcData = req.body.data
+      io.emit('nfcData', nfcData);
+    }
+
+  }
+
+  // Logic: Server decides status and LED color based on action
+  let statusEntry = statuses.find((s) => s.action === action);
+  switch(statusEntry.status) {
+    case "available": 
+      unit.status = statusEntry.status
+      sendLedCommand(unit.ip, null, statusEntry.jsonBody);
+      break;
+    case "occupied":
+      unit.status = statusEntry.status
+      sendLedCommand(unit.ip, null, statusEntry.jsonBody);
+      break;
+    case "offline":
+      unit.status = statusEntry.status
+      sendLedCommand(unit.ip, "off", statusEntry.jsonBody);
+      break;
+    case "busy":
+      unit.status = statusEntry.status
+      sendLedCommand(unit.ip, "rainbow", statusEntry.jsonBody);
+      break;
+    case "ending":
+      unit.status = statusEntry.status
+      sendLedCommand(unit.ip, "clock", statusEntry.jsonBody);
+      break;
+    default:
+      console.log("No Status found")
+      return;
+  }
+
+  res.status(200).send("OK");  
 
   // Notify all dashboards to update
   io.emit("updateUnits", units);
-
-  res.status(200).send("OK");
 });
 
 setInterval(() => {
@@ -299,7 +278,7 @@ setInterval(() => {
       unit.status = "ending";
       unit.lastSeen = new Date();
 
-      sendClockCommand(unit.ip, endingStatus.jsonBody);
+      sendLedCommand(unit.ip, "clock", endingStatus.jsonBody);
 
       io.emit("updateUnits", units);
     }
@@ -346,23 +325,32 @@ async function safeFetch(url, payload, description) {
   } catch (err) {
     console.error(`[${description}] Failed to reach ${url}: ${err.message}`);
     // TODO: Optionally set unit.status = 'offline' here if connection fails
-
   }
 }
 
-async function sendLedCommand(ip, payload) {
-    await safeFetch(`http://${ip}/api/v1/setLeds`, payload, "LED_CMD");
+async function sendLedCommand(ip, type, payload) {
+  let url = `http://${ip}/api/setLeds`;
+  if(type) url = url + `/${type}`;
+  console.log(`Sending Led command: ${url}`);
+  await safeFetch(url, payload, "LED_CMD");
 }
 
-async function sendClockCommand(ip, payload) {
-    await safeFetch(`http://${ip}/api/v1/setLeds/clock`, payload, "CLOCK_CMD");
+function getLocalIp() {
+  const interfaces = os.networkInterfaces();
+  for (const iface of Object.values(interfaces)) {
+    for (const config of iface) {
+      if (config.family === "IPv4" && !config.internal) {
+        return config.address;
+      }
+    }
+  }
+  return "localhost";
 }
 
 const PORT = 3001;
-const wifiIp = "192.168.100.50"
+const wifiIp = getLocalIp();
 server.listen(PORT, "0.0.0.0", () => {
   console.log("-----------------------------------------");
-  console.log(`On Wifi-IP Address: ${wifiIp} (SSID PUKK)`);
   console.log(`Server running at http://${wifiIp}:${PORT}/dashboard`);
   console.log("-----------------------------------------");
 });

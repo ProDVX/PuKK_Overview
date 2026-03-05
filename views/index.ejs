@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Pukk Overview</title>
+  <title>PuKK Workspace Overview</title>
   <link rel="stylesheet" href="/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
 
 <body>
   <div class="header">
-    <h1>PUKK Workspace Overview</h1>
+    <h1>PuKK Workspace Overview</h1>
   </div>
   
   <div class="grid-container" id="pukk-grid"></div>
@@ -25,20 +25,20 @@
           border-bottom: 1px solid #eee;
           padding-bottom: 15px;
         ">
-      <%# <input type="text" id="rename-input" placeholder="Enter new name" style="padding: 8px; width: 80%; margin-bottom: 5px" /> %>
-      <%# <button onclick="save_name()" style="width: 85%; background: #e3f2fd"> %>
-        <%# Save Name %>
-      <%# </button> %>
+      <input type="text" id="rename-input" placeholder="Enter new name" style="padding: 8px; width: 80%; margin-bottom: 5px" />
+      <button onclick="save_name()" style="width: 85%; background: #e3f2fd">
+        Save Name
+      </button>
     </div>
 
-    <%# <p id="modal-ip"></p> %>
-    <%# <p id="modal-mac"></p> %>
-    <%# <p id="modal-lastSeen"></p> %>
+    <p id="modal-ip"></p>
+    <p id="modal-mac"></p>
+    <p id="modal-lastSeen"></p>
     <div class="button-group">
       <button onclick="set_occupied()">Set Status: Occupied</button>
       <button onclick="set_online()">Set Status: Available</button>
       <button onclick="set_busy()">Set Status: Busy</button>
-      <%# <button class="deleteBtn" onclick="remove_pukk()">Remove Pukk</button> %>
+      <button class="deleteBtn" onclick="remove_pukk()">Remove PuKK</button>
       <button class="close-btn" onclick="closeModal()">Close</button>
     </div>
   </dialog>
@@ -81,6 +81,8 @@
       selectedUnitId = id;
       const unit = localUnits.find(u => u.id === id);
       document.getElementById('modal-title').innerText = unit.name;
+      document.getElementById('modal-ip').innerText = `IP Address: ${unit.ip}`;
+      document.getElementById('modal-mac').innerText = `MAC Address: ${unit.mac}`;
 
       const timeToDisplay = new Date(unit.lastSeen).toLocaleString('en-GB', {
 		year: 'numeric',
@@ -90,7 +92,7 @@
 		minute: '2-digit',
 		second: '2-digit'
 	  });
-      <%# document.getElementById('modal-lastSeen').innerText = `Last Seen: ${timeToDisplay}`; %>
+      document.getElementById('modal-lastSeen').innerText = `Last Seen: ${timeToDisplay}`;
 
       modal.showModal();
     }
@@ -206,7 +208,7 @@
           mac: unit.mac,
           newName: newName
         })
-      }, "Could not rename Pukk");
+      }, "Could not rename PuKK");
     }
 
     async function manual_command(command) {
@@ -239,7 +241,7 @@
         if (response.ok) console.log("Led Command sent successfully")
       } catch (err) {
         console.error("Fetch error:", err);
-        <%# alert("Could not reach the PUKK.") %>
+        alert("Could not reach the PUKK.")
       }
     }
 
@@ -247,6 +249,12 @@
     socket.on('updateUnits', (updatedUnits) => {
       renderUI(updatedUnits);
     });
+
+    socket.on('nfcData', (nfcData)=> {
+      console.log(nfcData);
+      let data = JSON.stringify(nfcData.nfcValue);
+      alert(`NFC Data:\n${data} \n Check the console (F12) for more information`);
+    })
 
     // Initial render when page loads
     renderUI(localUnits);
