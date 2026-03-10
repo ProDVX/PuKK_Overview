@@ -22,12 +22,10 @@ app.use(express.json({
   verify: (req, res, buf, encoding) => {
     const rawString = buf.toString(encoding || 'utf8');
     
-    // This will print the exact string, including hidden characters
     console.log("--- RAW INCOMING BODY ---");
     console.log(rawString);
     console.log("-------------------------");
 
-    // We can also log the hex values to see hidden control characters (like \x00 or \x02)
     console.log("HEX representation (to find hidden chars):");
     console.log(buf.toString('hex').match(/.{1,2}/g).join(' '));
   }
@@ -232,7 +230,7 @@ app.post("/", async (req, res) => {
 
   }
 
-  // Logic: Server decides status and LED color based on action
+  // Server decides what to do on an action
   let statusEntry = statuses.find((s) => s.action === action);
   switch(statusEntry.status) {
     case "available": 
