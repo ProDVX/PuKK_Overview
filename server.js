@@ -346,7 +346,7 @@ function getLocalIp() {
 }
 
 const PORT = 3001;
-const wifiIp = getLocalIp();
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log("-----------------------------------------");
   console.log(`Server running at http://${wifiIp}:${PORT}/dashboard`);
