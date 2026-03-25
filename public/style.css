@@ -1,5 +1,6 @@
 /* style.css */
 .source-sans-3-bold {
+<<<<<<< HEAD
   font-family: "Source Sans 3", sans-serif;
   font-optical-sizing: auto;
   font-weight: 300;
@@ -34,10 +35,47 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+=======
+    font-family: "Source Sans 3", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+}
+
+body {
+    font-family: "Source Sans 3", sans-serif;
+    text-align: center;
+    background: #e2eaf0;
+}
+
+.header {
+    background-color: #007acc;
+    color: white;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 2rem;
+    font-size: larger;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 40px;
+    padding: 40px;
+}
+
+.pukk-unit {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+>>>>>>> origin/polling
 }
 
 /* Circular Ring */
 .circle {
+<<<<<<< HEAD
   background: #383838;
   width: 120px;
   height: 120px;
@@ -150,4 +188,125 @@ dialog::backdrop {
 .button-group .close-btn {
   background: #f0f0f0;
   margin-top: 20px;
+=======
+    background: #383838;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 16px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    transition: 0.3s;
+    color: white;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2), 4px 0 4px rgba(0, 0, 0, 0.2), -4px 0 4px rgba(0, 0, 0, 0.2), 0 -4px 4px rgba(0, 0, 0, 0.2);
+}
+
+@property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes rotateGradient {
+    to {
+        --angle: 360deg;
+    }
+}
+
+.available {
+    border-color: #27bd2c;
+}
+
+/* Light Green */
+.occupied {
+    border-color: #ce0015;
+}
+
+/* Light Red */
+.offline {
+    border-color: #757575;
+}
+
+/* Grey */
+
+
+.circle.busy {
+    color: white;
+    background-image: linear-gradient(#383838, #383838),
+    conic-gradient(
+            from var(--angle),
+            rgba(255, 0, 0, 0.9),
+            rgba(255, 164, 0, 0.9),
+            rgba(164, 164, 0, 0.9),
+            rgba(0, 255, 0, 0.9),
+            rgba(0, 164, 164, 0.9),
+            rgba(0, 0, 255, 0.9),
+            rgba(164, 0, 164, 0.9),
+            rgba(255, 0, 0, 0.9)
+    );
+    background-origin: border-box;
+    background-clip: content-box, border-box;
+    animation: rotateGradient 3s linear infinite;
+}
+
+@keyframes breatheOrange {
+    0% {
+        border-color: #ffa500;
+        box-shadow: 0 0 5px rgba(255, 165, 0, 0.2);
+    }
+    50% {
+        border-color: #ffcc80; /* Lighter orange */
+        box-shadow: 0 0 20px rgba(255, 165, 0, 0.6);
+    }
+    100% {
+        border-color: #ffa500;
+        box-shadow: 0 0 5px rgba(255, 165, 0, 0.2);
+    }
+}
+
+.ending {
+    /* Apply the animation: 3 seconds long, smooth, and loops forever */
+    animation: breatheOrange 3s ease-in-out infinite;
+}
+
+.status-box {
+    border: 1px solid #000;
+    border-radius: 1rem;
+    background: white;
+    padding: 5px 20px;
+    font-style: italic;
+    font-family: SourceSans3-Bold, sans-serif;
+}
+
+dialog {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    width: 300px;
+    text-align: center;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.button-group button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.button-group .close-btn {
+    background: #f0f0f0;
+    margin-top: 20px;
+>>>>>>> origin/polling
 }
