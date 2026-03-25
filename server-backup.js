@@ -227,7 +227,6 @@ app.post("/", async (req, res) => {
       let nfcData = req.body.data
       io.emit('nfcData', nfcData);
     }
-
   }
 
   // Server decides what to do on an action

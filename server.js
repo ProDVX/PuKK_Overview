@@ -29,7 +29,7 @@ app.use(express.json({
     }
 }));
 
-let units = []
+let units = [];
 let nextUnitId = 1;
 
 const red_static = {
@@ -60,34 +60,71 @@ const blue_static = {
     duration_ms: 0
 }
 
-let statuses = [
-    {
-        status: 'occupied',
-        command: 'set_leds',
-        led_values: red_static,
-    },
-    {
-        status: 'available',
-        command: 'set_leds',
-        led_values: green_static,
-    },
-    {
-        status: 'busy',
-        command: 'set_leds_rainbow',
-        led_values: {
-            brightness: 100,
-            speed_ms: 10,
-            duration_ms: 0,
-            counter_clockwise: false,
-        }
-    },
-    {
-        status: 'ota',
-        command: 'ota',
-        ota_url: "https://www.example.com/",
-        led_values: blue_static,
-    }
-]
+const actions = new Map([
+		["short_press", "available"],
+		["double_press", "occupied"],
+		["long_press_3s", "busy"],
+		["nfc", "occupied"]
+])
+
+let statuses = new Map([
+    [ 'occupied',
+		{
+			command: 'set_leds',
+        	led_values: red_static,
+		}
+	],
+	[ 'available',
+		{
+			command: 'set_leds',
+			led_values: green_static,
+		}
+	],
+	[ 'busy',
+		{
+			command: 'set_leds_rainbow',
+			led_values: {
+				brightness: 100,
+				speed_ms: 10,
+				duration_ms: 0,
+				counter_clockwise: false,
+			}
+		}
+	],
+	[ 'ending',
+		{
+			command: 'set_leds_clock',
+			led_values: {
+				initial_color: {
+				brightness: 0,
+				red: 0,
+				green: 0,
+				blue: 0
+				},
+				intermediate_color: {
+				brightness: 0,
+				red: 0,
+				green: 0,
+				blue: 0
+				},
+				end_color: {
+				brightness: 0,
+				red: 0,
+				green: 0,
+				blue: 0
+				},
+				rotation_time_s: 0,
+				counter_clockwise: false
+			}
+		}
+	],
+	[ 'ota',
+		{
+			command: 'ota',
+        	led_values: blue_static,
+		}
+	]
+])
 
 app.get('/dashboard', (req, res) => {
     res.render('index', {pukks: JSON.stringify(units)})
@@ -97,36 +134,56 @@ app.post('/', (req, res) => {
     const action = req.query.action ? req.query.action : null;
     const mac = req.query.mac ? req.query.mac.toUpperCase() : null;
     const ip = req.ip.replace("::ffff:", "");
-    console.log(`Received Poll from ip:${ip} and mac:${mac}`);
+    console.log(`Received request from mac:${mac} with action '${action}'`);
 
-    let pukk = units.find(u => u.mac === mac)
-    if (!pukk) {
-        let newPukk = {
-            id: nextUnitId,
-            name: `PuKK_${nextUnitId}`,
-            status: 'available',
-            mac: mac,
-            ip: ip,
-            hasNew: true,
-            lastSeen: Date.now(),
-        }
-        console.log(`Added new PuKK ${newPukk.name} to IP: ${ip} and MAC: ${mac}`);
-        units.push(newPukk);
-        pukk = newPukk;
-    } else {
-        pukk.ip_address = ip;
-        pukk.lastSeen = Date.now();
-    }
+    let pukk = getPukk(mac);
 
-    if (action === "poll" && !pukk.hasNew) {
-        return res.status(204).send({status: "No action required"})
-    }
-    console.log(`Sending status ${pukk.status} to ${pukk.name}`);
-    const jsonBody = statuses.find(s => s.status === pukk.status);
-    console.log(jsonBody);
+	if (action==="nfc") {
+		if (req.body.data) {
+		  let nfcData = req.body.data
+		  io.emit('nfcData', nfcData);
+		}
+	  }
+
+	// Handle Status based on action	
+	const status = actions.get(action);
+	if (status == undefined){
+		console.log(`status undefined for action ${action}`)
+		return res.status(404).send({msg: `Action ${action} was not found`});
+	}
+	
+	// console.log(`Found action: ${foundAction}`)
+	const newStatus = statuses.get(status);
+	if (newStatus == undefined) {
+		console.log(`newStatus undefined`)		
+		return res.status(404).send({msg: `No status found with ${action}`});
+	}
+	pukk.status = status;
+	
+	pukk.hasNew = false;
+	console.log(`Sending status ${status} to ${pukk.name}`);
     io.emit("updateUnits", units);
-    pukk.hasNew = false;
-    return res.status(200).send(JSON.stringify(jsonBody));
+    return res.status(200).send(JSON.stringify(newStatus));
+})
+
+app.get('/', (req, res) => {
+    const action = req.query.action ? req.query.action : null;
+    const mac = req.query.mac ? req.query.mac.toUpperCase() : null;
+    const ip = req.ip.replace("::ffff:", "");
+    console.log(`Received request from mac:${mac} with action '${action}'`);
+
+	if (mac == null) return res.status(404).send({msg: 'Missing MAC Address'});
+	let pukk = getPukk(mac);
+	if (pukk == null) return res.status(404).send({msg: 'Device not found and could not be added'})
+
+	if (action === "poll") {
+		// Polling for the current status
+		if (pukk.hasNew) {
+			const newStatus = statuses.get(pukk.status);
+			pukk.hasNew = false;
+			return res.status(200).send(JSON.stringify(newStatus));
+		} else return res.status(204).send({msg: "No action required"});
+    }
 })
 
 app.post('/setStatus', (req, res) => {
@@ -137,7 +194,6 @@ app.post('/setStatus', (req, res) => {
         device.lastSeen = new Date();
         device.hasNew = true;
         io.emit("updateUnits", units);
-
         return res.status(200).send("Status updated")
     }
     return res.status(404).send('Not found');
@@ -186,6 +242,27 @@ function getLocalIp() {
         }
     }
     return "localhost";
+}
+
+function getPukk(mac){ 
+	let pukk = units.find(u => u.mac === mac);
+    if (pukk == undefined) {
+		console.log(`pukk undefined`)
+        let newPukk = {
+			id: nextUnitId,
+            name: `PuKK_${nextUnitId}`,
+            status: 'available',
+            mac: mac,
+            hasNew: true,
+            lastSeen: Date.now(),
+        }
+        console.log(`Added new PuKK ${newPukk.name} with MAC: ${mac}`);
+        units.push(newPukk);
+        pukk = newPukk;
+    } else {
+        pukk.lastSeen = Date.now();
+    }
+	return pukk;
 }
 
 app.use((err, req, res, next) => {

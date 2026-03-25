@@ -1,25 +1,4 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html>
-
-<head>
-  <title>PuKK Workspace Overview</title>
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <script src="/socket.io/socket.io.js"></script>
-</head>
-
-<body>
-  <div class="header">
-    <h1>PuKK Workspace Overview</h1>
-  </div>
-  
-  <div class="grid-container" id="pukk-grid"></div>
-
-  <dialog id="command-modal">
-=======
 <html lang="en">
 <head>
     <title>PuKK Workspace Overview</title>
@@ -38,7 +17,6 @@
 <div class="grid-container" id="pukk-grid"></div>
 
 <dialog id="command-modal">
->>>>>>> origin/polling
     <h3 id="modal-title">Unit Name</h3>
 
     <div style="
@@ -46,65 +24,31 @@
           border-bottom: 1px solid #eee;
           padding-bottom: 15px;
         ">
-<<<<<<< HEAD
-      <input type="text" id="rename-input" placeholder="Enter new name" style="padding: 8px; width: 80%; margin-bottom: 5px" />
-      <button onclick="save_name()" style="width: 85%; background: #e3f2fd">
-        Save Name
-      </button>
-=======
         <input type="text" id="rename-input" placeholder="Enter new name"
                style="padding: 8px; width: 80%; margin-bottom: 5px"/>
         <button onclick="save_name()" style="width: 85%; background: #e3f2fd">
             Save Name
         </button>
->>>>>>> origin/polling
     </div>
 
     <p id="modal-ip"></p>
     <p id="modal-mac"></p>
     <p id="modal-lastSeen"></p>
     <div class="button-group">
-<<<<<<< HEAD
-      <button onclick="set_occupied()">Set Status: Occupied</button>
-      <button onclick="set_online()">Set Status: Available</button>
-      <button onclick="set_busy()">Set Status: Busy</button>
-      <button class="deleteBtn" onclick="remove_pukk()">Remove PuKK</button>
-      <button class="close-btn" onclick="closeModal()">Close</button>
-    </div>
-  </dialog>
-
-  <script>
-=======
-        <button onclick="set_occupied()">Set Status: Occupied</button>
-        <button onclick="set_online()">Set Status: Available</button>
-        <button onclick="set_busy()">Set Status: Busy</button>
-        <button class="deleteBtn" onclick="remove_pukk()">Remove PuKK</button>
+        <button onclick="set_status('occupied')">Set Status: Occupied</button>
+        <button onclick="set_status('available')">Set Status: Available</button>
+        <button onclick="set_status('busy')">Set Status: Busy</button>
+		<button onclick="set_status('ota')">Queue OTA</button>
+        <button class="delete-btn" onclick="remove_pukk()">Remove PuKK</button>
         <button class="close-btn" onclick="closeModal()">Close</button>
     </div>
 </dialog>
 
 <script>
->>>>>>> origin/polling
     const socket = io();
     const grid = document.getElementById('pukk-grid');
     const modal = document.getElementById('command-modal');
 
-<<<<<<< HEAD
-    let localUnits = <%- units %>;
-    let selectedUnitId = null;
-
-    async function safeUIFetch(url, options, errorMessage) {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) throw new Error(`Status: ${response.status}`);
-        return true;
-      } catch (err) {
-        console.error(`${errorMessage}:`, err);
-        // Inform the user without crashing
-        alert(`${errorMessage}. Check server connection.`);
-        return false;
-      }
-=======
     let localUnits = <%- pukks %>;
     let selectedUnitId = null;
 
@@ -119,18 +63,14 @@
             alert(`${errorMessage}. Check server connection.`);
             return false;
         }
->>>>>>> origin/polling
+
     }
 
     // Function to build the HTML for the units
     function renderUI(data) {
-<<<<<<< HEAD
-      localUnits = data; // Update local reference
-      grid.innerHTML = data.map(u => `
-=======
+
         localUnits = data; // Update local reference
         grid.innerHTML = data.map(u => `
->>>>>>> origin/polling
       	<div class="pukk-unit" onclick="openModal(${u.id})">
       		<div class="circle ${u.status}">
       			<span class="inner">${u.name}</span>
@@ -141,173 +81,6 @@
     }
 
     function openModal(id) {
-<<<<<<< HEAD
-      selectedUnitId = id;
-      const unit = localUnits.find(u => u.id === id);
-      document.getElementById('modal-title').innerText = unit.name;
-      document.getElementById('modal-ip').innerText = `IP Address: ${unit.ip}`;
-      document.getElementById('modal-mac').innerText = `MAC Address: ${unit.mac}`;
-
-      const timeToDisplay = new Date(unit.lastSeen).toLocaleString('en-GB', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit'
-	  });
-      document.getElementById('modal-lastSeen').innerText = `Last Seen: ${timeToDisplay}`;
-
-      modal.showModal();
-    }
-
-    function closeModal() {
-      modal.close();
-    }
-
-    async function remove_pukk() {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      const success = await safeUIFetch('/removePukk', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          mac: unit.mac
-        })
-      }, "Could not remove Pukk");
-
-      if (success) closeModal();
-    }
-
-    async function set_occupied() {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      unit.status = 'occupied';
-
-      await safeUIFetch('/setStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          mac: unit.mac,
-          newStatus: "occupied"
-        })
-      }, "Could not set status to occupied");
-
-      manual_command({
-        type: "2",
-        red: 255,
-        green: 0,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100
-      })
-    }
-
-    async function set_online() {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      unit.status = 'online';
-
-      await safeUIFetch('/setStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          mac: unit.mac,
-          newStatus: "available"
-        })
-      }, "Could not set status to online");
-
-      manual_command({
-        type: "2",
-        red: 0,
-        green: 255,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100
-      })
-    }
-
-    async function set_busy() {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      unit.status = 'busy';
-
-      await safeUIFetch('/setStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          mac: unit.mac,
-          newStatus: "busy"
-        })
-      })
-
-      manual_command({
-        type: 4,
-        red: 0,
-        green: 255,
-        blue: 0,
-        wait_ms: 0,
-        speed_ms: 0,
-        brightness: 100
-      })
-    }
-
-    async function save_name() {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      const newName = document.getElementById('rename-input').value;
-      if (!newName) return;
-
-      await safeUIFetch('/rename', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          mac: unit.mac,
-          newName: newName
-        })
-      }, "Could not rename PuKK");
-    }
-
-    async function manual_command(command) {
-      const unit = localUnits.find(u => u.id === selectedUnitId);
-      if (unit.status === 'offline') {
-        alert('Unit is offline. Cannot send command.');
-        return;
-      }
-
-      try {
-
-        const response = await fetch(`http://${unit.ip}/setLeds`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            "ledValues": {
-              "type": command.type,
-              "red": command.red,
-              "green": command.green,
-              "blue": command.blue,
-              "wait_ms": command.wait_ms,
-              "speed_ms": command.speed_ms,
-              'brightness': command.brightness
-            }
-          })
-        })
-
-        if (response.ok) console.log("Led Command sent successfully")
-      } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Could not reach the PUKK.")
-      }
-=======
         selectedUnitId = id;
         const unit = localUnits.find(u => u.id === id);
         document.getElementById('modal-title').innerText = unit.name;
@@ -346,73 +119,21 @@
         if (success) closeModal();
     }
 
-    async function set_occupied() {
-        const unit = localUnits.find(u => u.id === selectedUnitId);
-        unit.status = 'occupied';
+	async function set_status(status) {
+		const unit = localUnits.find(u => u.id === selectedUnitId);
+		unit.status = status;
 
-        await safeUIFetch('/setStatus', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                mac: unit.mac,
-                newStatus: "occupied"
-            })
-        }, "Could not set status to occupied");
-
-        manual_command({
-            type: "2",
-            red: 255,
-            green: 0,
-            blue: 0,
-            wait_ms: 0,
-            speed_ms: 0,
-            brightness: 100
-        })
-    }
-
-    async function set_online() {
-        const unit = localUnits.find(u => u.id === selectedUnitId);
-        unit.status = 'online';
-
-        await safeUIFetch('/setStatus', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                mac: unit.mac,
-                newStatus: "available"
-            })
-        }, "Could not set status to online");
-
-        manual_command({
-            type: "2",
-            red: 0,
-            green: 255,
-            blue: 0,
-            wait_ms: 0,
-            speed_ms: 0,
-            brightness: 100
-        })
-    }
-
-    async function set_busy() {
-        const unit = localUnits.find(u => u.id === selectedUnitId);
-        unit.status = 'busy';
-
-        await safeUIFetch('/setStatus', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                mac: unit.mac,
-                newStatus: "busy"
-            })
-        })
-    }
+		await safeUIFetch('/setStatus', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				mac: unit.mac,
+				newStatus: status
+			})
+		})
+	}
 
     async function save_name() {
         const unit = localUnits.find(u => u.id === selectedUnitId);
@@ -437,20 +158,10 @@
             alert('Unit is offline. Cannot send command.');
             return;
         }
->>>>>>> origin/polling
     }
 
     // Handle real-time updates from server
     socket.on('updateUnits', (updatedUnits) => {
-<<<<<<< HEAD
-      renderUI(updatedUnits);
-    });
-
-    socket.on('nfcData', (nfcData)=> {
-      console.log(nfcData);
-      let data = JSON.stringify(nfcData.nfcValue);
-      alert(`NFC Data:\n${data} \n Check the console (F12) for more information`);
-=======
         renderUI(updatedUnits);
     });
 
@@ -458,16 +169,13 @@
         console.log(nfcData);
         let data = JSON.stringify(nfcData.nfcValue);
         alert(`NFC Data:\n${data} \n Check the console (F12) for more information`);
->>>>>>> origin/polling
     })
 
     // Initial render when page loads
     renderUI(localUnits);
-<<<<<<< HEAD
-  </script>
-=======
+
 </script>
->>>>>>> origin/polling
+
 </body>
 
 </html>
