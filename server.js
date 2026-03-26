@@ -208,7 +208,7 @@ setInterval(() => {
         const timeElapsed = now - new Date(unit.lastSeen);
         if (unit.status === "occupied" && timeElapsed > TIMEOUT_MS) {
             console.log(`Auto resetting ${unit.name} due to inactivity.`);
-            const endingStatus = statuses.find((s) => s.status === "ending");
+            const endingStatus = statuses.get("ending");
             unit.status = "ending";
             unit.lastSeen = new Date();
             io.emit("updateUnits", units);
@@ -224,7 +224,7 @@ setInterval(() => {
         if (unit.status === "ending" && timeElapsed > TIMEOUT_MS) {
             console.log(`${unit.name} is reset to available.`);
 
-            const availableStatus = statuses.find((s) => s.status === "available");
+            const availableStatus = statuses.get("available");
             unit.status = "available";
 
             io.emit("updateUnits", units);
