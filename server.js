@@ -257,6 +257,7 @@ function getPukk(mac){
             lastSeen: Date.now(),
         }
         console.log(`Added new PuKK ${newPukk.name} with MAC: ${mac}`);
+		nextUnitId = nextUnitId++;
         units.push(newPukk);
         pukk = newPukk;
     } else {
