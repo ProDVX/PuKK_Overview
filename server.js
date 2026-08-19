@@ -96,22 +96,22 @@ let statuses = new Map([
 			command: 'set_leds_clock',
 			led_values: {
 				initial_color: {
-				brightness: 0,
-				red: 0,
-				green: 0,
-				blue: 0
+					brightness: 0,
+					red: 0,
+					green: 0,
+					blue: 0
 				},
 				intermediate_color: {
-				brightness: 0,
-				red: 0,
-				green: 0,
-				blue: 0
+					brightness: 0,
+					red: 0,
+					green: 0,
+					blue: 0
 				},
 				end_color: {
-				brightness: 0,
-				red: 0,
-				green: 0,
-				blue: 0
+					brightness: 0,
+					red: 0,
+					green: 0,
+					blue: 0
 				},
 				rotation_time_s: 0,
 				counter_clockwise: false
