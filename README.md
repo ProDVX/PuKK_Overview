@@ -26,7 +26,7 @@ The following section describes how to set up the server and PuKK devices to com
 ### Configuration
 To configure your PuKK Devices, ensure the CMS Server Address field is set to the following address where the IP address is the address that you got in Step 4 of the installation:
 
-`http://<ip-address>:3001`
+`http://<ip-address>:3030`
 
 
 ## Documentation
