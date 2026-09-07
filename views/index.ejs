@@ -35,9 +35,17 @@
     <p id="modal-mac"></p>
     <p id="modal-lastSeen"></p>
     <div class="button-group">
-        <button onclick="set_status('occupied')">Set Status: Occupied</button>
-        <button onclick="set_status('available')">Set Status: Available</button>
-        <button onclick="set_status('busy')">Set Status: Busy</button>
+        <%# <button onclick="set_status('occupied')">Set Status: Occupied</button> %>
+        <%# <button onclick="set_status('available')">Set Status: Available</button> %>
+        <%# <button onclick="set_status('busy')">Set Status: Busy</button>  %>
+		<button onclick="set_status('marquee')">Set Leds: Marquee</button>
+		<button onclick="set_status('breathe')">Set Leds: Breathe</button>
+		<button onclick="set_status('quads')">Set Leds: Quads</button>
+		<button onclick="set_status('rainbow')">Set Leds: Rainbow</button>
+		<button onclick="set_status('ukraine')">Set Leds: Ukraine</button>
+		<button onclick="set_status('indiv')">Set Leds: Indiv</button>
+		<button onclick="set_status('clock')">Set Leds: Clock</button>
+		<button onclick="set_status('off')">Set Leds: Off</button>
 		<button onclick="set_status('ota')">Queue OTA</button>
         <button class="delete-btn" onclick="remove_pukk()">Remove PuKK</button>
         <button class="close-btn" onclick="closeModal()">Close</button>
