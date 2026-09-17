@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const mqtt = require('mqtt');
 
+
 const app = express()
 const server = http.createServer(app);
 const port = 3030
@@ -12,6 +13,8 @@ const io = new Server(server);
 
 const viewsPath = path.join(__dirname, "./views");
 const publicPath = path.join(__dirname, "./public");
+
+require('dotenv').config();
 
 app.set("view engine", "ejs");
 app.set("views", viewsPath);
@@ -31,12 +34,12 @@ app.use(express.json({
 }));
 
 // -------- MQTT Setup --------
-const MQTT_BROKER = 'mqtt://';
+const MQTT_BROKER = process.env.MQTT_BROKER;
 const MQTT_TOPIC_PREFIX = 'pukk/';
  
 const mqttClient = mqtt.connect(MQTT_BROKER, {
-	username: '',
-	password: '',
+	username: process.env.MQTT_USERNAME,
+	password: process.env.MQTT_PASSWORD,
 });
  
 mqttClient.on('connect', () => {
@@ -124,8 +127,6 @@ mqttClient.on('disconnect', () => {
     console.warn('MQTT: Disconnected from broker');
 });
 
-
-
 let units = [];
 let nextUnitId = 1;
 
@@ -141,7 +142,7 @@ const red_static = {
 }
 const green_static = {
     color: color_green,
-    duration_ms: 0
+	duration_ms: 0
 }
 const blue_static = {
     color: color_blue,
@@ -295,28 +296,6 @@ let statuses = new Map([
 	[ 'off',
 		{
 			command: 'set_leds_off',
-		}
-	], 
-	['ukraine',
-		{
-			command: 'set_leds_individual',
-			led_values: {
-				colors: [
-					color_blue,
-					color_blue,
-					color_blue,
-					color_yellow,
-					color_yellow,
-					color_yellow,
-					color_yellow,
-					color_yellow,
-					color_yellow,
-					color_blue,
-					color_blue,
-					color_blue
-				],
-				duration_ms: 0,
-			}
 		}
 	]
 ])
