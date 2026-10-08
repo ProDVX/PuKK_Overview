@@ -30,7 +30,7 @@ To configure your PuKK Devices, ensure the CMS Server Address field is set to th
 
 
 ## Documentation
-[Full documentation page](https://prodvx.github.io/docs/PuKK_Workspace)
+[PuKK Workspace Documentation Page](https://prodvx.github.io/docs/PuKK_Workspace)
 
 See the [User and Integration manual](https://prodvx.github.io/docs/PuKK_Workspace/PuKK_Manual.pdf) for the full guide on how the PuKK Workspace devices function and how to integrate them into your system.
 
