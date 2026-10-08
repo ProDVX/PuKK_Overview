@@ -30,9 +30,11 @@ To configure your PuKK Devices, ensure the CMS Server Address field is set to th
 
 
 ## Documentation
-See the [User and Integration manual](https://www.dropbox.com/scl/fi/o6r9lufva4mzccbxaqou2/PuKK_Manual_v1.0.pdf?rlkey=9eowzmr6038c3p9r6zas8a6g7&st=9rpdm99u&dl=0) for the full guide on how the PuKK Workspace devices function and how to integrate them into your system.
+[Full documentation page](https://prodvx.github.io/docs/PuKK_Workspace)
 
-See the [REST API Specification](https://www.dropbox.com/scl/fi/zd7ylq0fs30gasmtutjna/REST_API_Specification_v1.0.html?rlkey=8lm3vl1dk4aexdqo7f36p6h3z&st=cbocvvpy&dl=0) for more details on which requests can be sent.
+See the [User and Integration manual](https://prodvx.github.io/docs/PuKK_Workspace/PuKK_Manual.pdf) for the full guide on how the PuKK Workspace devices function and how to integrate them into your system.
+
+See the [REST API Specification](https://prodvx.github.io/docs/PuKK_Workspace/PuKK_API_Specification.html) for more details on which requests can be sent.
 
 
 
